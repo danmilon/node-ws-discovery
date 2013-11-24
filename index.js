@@ -270,6 +270,9 @@ function genMessageId() {
   return 'urn:uuid:' + uuid.v4()
 }
 
+function setTimeoutWithRandomDelay(fn, max) {
+  setTimeout(fn, Math.floor(Math.random() * max))
+}
 
 function WSDiscovery(opts) {
   if (!(this instanceof WSDiscovery)) {
@@ -279,7 +282,8 @@ function WSDiscovery(opts) {
   this.opts = opts || {}
   this.device = this.opts.device
 
-  this.opts.version  = this.opts.version || '1.1'
+  this.opts.version = this.opts.version || '1.1'
+  this.maxDelay = this.opts.maxDelay || 500
 
   this.resetInstanceId()
   this.msgNum = 1
@@ -344,7 +348,7 @@ WSDiscovery.prototype.hello = function (cb) {
     this.msgNum,
     this.device)
 
-  this.socket.send(body, 0, body.length, 3702, '239.255.255.250', cb)
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, 3702, '239.255.255.250', cb), this.maxDelay)
   this.msgNum += 1
 }
 
@@ -357,7 +361,7 @@ WSDiscovery.prototype.bye = function (cb) {
     this.msgNum,
     this.device)
 
-  this.socket.send(body, 0, body.length, 3702, '239.255.255.250', cb)
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, 3702, '239.255.255.250', cb), this.maxDelay)
   this.msgNum += 1
 }
 
@@ -384,7 +388,7 @@ WSDiscovery.prototype.replyToResolve = function (tree, rinfo) {
     this.msgNum,
     this.device)
 
-  this.socket.send(body, 0, body.length, rinfo.port, rinfo.address)
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, rinfo.port, rinfo.address), this.maxDelay)
   this.msgNum += 1
 }
 
@@ -406,7 +410,7 @@ WSDiscovery.prototype.replyToProbe = function (tree, rinfo) {
     this.msgNum,
     this.device)
 
-  this.socket.send(body, 0, body.length, rinfo.port, rinfo.address)
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, rinfo.port, rinfo.address), this.maxDelay)
   this.msgNum += 1
 }
 
@@ -428,26 +432,22 @@ WSDiscovery.prototype.probe = function (opts, cb) {
     , body = makeDiscoveryBody(this.opts.version, messageId)
 
   this.socket.on('message', listener)
-  
-  var devices = []
 
   setTimeout(function () {
     self.socket.removeListener('message', listener)
     cb()
   }, opts.timeout)
 
-  this.socket.send(body, 0, body.length, 3702, '239.255.255.250')
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, 3702, '239.255.255.250'), this.maxDelay)
 
-  function listener(msg, rinfo) {
+  function listener(msg) {
     var tree = et.parse(msg.toString())
 
     var relatesTo = tree.findtext('*/wsa:RelatesTo')
     if (relatesTo === messageId) {
       var matches = tree.findall('*/*/wsd:ProbeMatch')
       
-      for (var i = 0; i < matches.length; i++) {
-        var match = matches[i]
-
+      matches.forEach(function (match) {
         var device = {
           address: match.findtext('*/wsa:Address'),
           types: match.findtext('wsd:Types'),
@@ -468,8 +468,7 @@ WSDiscovery.prototype.probe = function (opts, cb) {
         else {
           self.emit('device', device)
         }
-
-      }
+      })
     }
   }
 }
@@ -492,9 +491,9 @@ WSDiscovery.prototype.resolve = function (opts, cb) {
     self.socket.removeListener('message', listener)
   }, opts.timeout)
 
-  this.socket.send(body, 0, body.length, 3702, '239.255.255.250')
+  setTimeoutWithRandomDelay(this.socket.send.bind(this.socket, body, 0, body.length, 3702, '239.255.255.250'), this.maxDelay)
 
-  function listener(msg, rinfo) {
+  function listener(msg) {
     var tree = et.parse(msg.toString())
 
     var relatesTo = tree.findtext('*/wsa:RelatesTo')
