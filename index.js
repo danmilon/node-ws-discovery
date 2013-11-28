@@ -3,6 +3,7 @@ var dgram = require('dgram')
   , et = require('elementtree')
   , EventEmitter = require('events').EventEmitter
   , util = require('util')
+  , bunyan = require('bunyan')
 
 var PROBE_ACTION = {
   '1.1': 'http://docs.oasis-open.org/ws-dd/ns/discovery/2009/01/Probe',
@@ -280,6 +281,7 @@ function WSDiscovery(opts) {
   }
   
   this.opts = opts || {}
+  
   this.device = this.opts.device
 
   this.opts.version = this.opts.version || '1.1'
@@ -287,6 +289,12 @@ function WSDiscovery(opts) {
 
   this.resetInstanceId()
   this.msgNum = 1
+
+  opts.log = opts.log || false
+
+  if (opts.log) {
+    this.log = bunyan.createLogger({ name: 'ws-discovery' })
+  }
 
   var isValidDPWSVersion = ['1.1', '2006', 'all'].indexOf(this.opts.version) !== -1
   if (!isValidDPWSVersion) {
@@ -313,7 +321,15 @@ WSDiscovery.prototype.bind = function (cb) {
   var self = this
 
   this.socket.bind(3702, function () {
+    if (self.log) {
+      self.log.info('udp socket listening', self.socket.address())
+    }
+    
     self.socket.addMembership('239.255.255.250')
+    
+    if (self.log) {
+      self.log.info('joined multicast group 239.255.255.250')
+    }
   })
 
   if (this.device) {
