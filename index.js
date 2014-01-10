@@ -280,12 +280,12 @@ function WSDiscovery(opts) {
     return new WSDiscovery(opts)
   }
   
-  this.opts = opts || {}
+  this.opts = opts = opts || {}
   
-  this.device = this.opts.device
+  this.device = opts.device
 
-  this.opts.version = this.opts.version || '1.1'
-  this.maxDelay = this.opts.maxDelay || 500
+  opts.version = opts.version || '1.1'
+  this.maxDelay = opts.maxDelay || 500
 
   this.resetInstanceId()
   this.msgNum = 1
@@ -296,17 +296,17 @@ function WSDiscovery(opts) {
     this.log = bunyan.createLogger({ name: 'ws-discovery' })
   }
 
-  var isValidDPWSVersion = ['1.1', '2006', 'all'].indexOf(this.opts.version) !== -1
+  var isValidDPWSVersion = ['1.1', '2006', 'all'].indexOf(opts.version) !== -1
   if (!isValidDPWSVersion) {
     throw new Error('dpwsVersion must be 1.1, 2006 or all')
   }
 
-  if (!this.device && this.opts.hello) {
+  if (!this.device && opts.hello) {
     throw new Error('asked to transmit hello messages but no device provided')
   }
 
-  if (this.device && typeof this.opts.hello === 'undefined') {
-    this.opts.hello = true
+  if (this.device && typeof opts.hello === 'undefined') {
+    opts.hello = true
   }
 
   this.socket = dgram.createSocket('udp4')
