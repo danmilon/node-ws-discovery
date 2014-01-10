@@ -355,6 +355,11 @@ WSDiscovery.prototype.bind = function (cb) {
   }
 }
 
+WSDiscovery.prototype.close = function () {
+  this.socket.once('close', this.emit.bind(this, 'close'))
+  this.socket.close()
+}
+
 WSDiscovery.prototype.hello = function (cb) {
   var msgId = genMessageId()
 
