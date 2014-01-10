@@ -472,7 +472,8 @@ WSDiscovery.prototype.probe = function (opts, cb) {
         var device = {
           address: match.findtext('*/wsa:Address'),
           types: match.findtext('wsd:Types'),
-          metadataVersion: match.findtext('wsd:MetadataVersion')
+          metadataVersion: match.findtext('wsd:MetadataVersion'),
+          xaddrs: match.findtext('wsd:XAddrs')
         }
 
         if (opts.resolve) {
