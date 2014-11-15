@@ -1,6 +1,6 @@
 {
   "name": "ws-discovery",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "WS Discovery library",
   "main": "index.js",
   "scripts": {
